@@ -1,41 +1,50 @@
 from django.http import HttpResponse
 from .models import Employee
 from django.views.decorators.csrf import csrf_exempt
-from .serializers import CreateEmployeeSerializer, MinimalEmployeeSerializer, DetailEmployeeSerializer
+from .serializers import CreateEmployeeSerializer, MinimalEmployeeSerializer, DetailEmployeeSerializer, UpdateEmployeeSerializer
 from rest_framework.parsers import JSONParser 
 from django.http import HttpResponse, JsonResponse 
-def index(request):
-    return HttpResponse("Hello, world. This is the another app.")
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
 
+class EmployeeListSet(APIView):
+    def get(self, request):
+        queryset = Employee.objects.all()
+        serializer = MinimalEmployeeSerializer(queryset, many =True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
-#DJANGO dont have json but it does have dictionary
-
-@csrf_exempt
-def employee_data(request, pk =None):
+    def post(self, request):
+        serializer = CreateEmployeeSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-    if request.method == "GET":
-        if pk:
-            queryset = Employee.objects.get(pk = pk)
-            print(queryset)
-            serializer = DetailEmployeeSerializer(queryset)
-            print(serializer.data)
-            return JsonResponse(serializer.data) 
-        else:
-            queryset = Employee.objects.all()#Objects
-            serializer = MinimalEmployeeSerializer(queryset, many=True)#Serialize 
-            return HttpResponse(serializer.data)
+class EmployeeRetrieveSet(APIView):
+    def get_object(self, pk):
+        return Employee.objects.get(pk=pk)
+    
+    def get(self, request, pk=None):
+        queryset =  self.get_object(pk)    
+        serializer =  DetailEmployeeSerializer(queryset)
+        return Response(serializer.data, status=status.HTTP_200_OK)         
 
-    elif request.method == "POST":
-        print("You are in POST", request.body)
-        data = JSONParser().parse(request)#Parse JSON
-        serializer = CreateEmployeeSerializer(data=data)#Serializer
-        if serializer.is_valid():#Validate
-            serializer.save()#save
-            print("Saving the data")
-            return HttpResponse("Post Method is called", serializer.data, status= 201)
-        print(serializer.errors)
-        return HttpResponse(serializer.errors)
-# def create_employee_data(request):
+    def put(self, request, pk=None):
+        queryset =  self.get_object(pk) 
+        serializer = UpdateEmployeeSerializer(queryset, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status = status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_404_NOT_FOUND)
+    
+    def delete(self, request, pk=None):
+        employee =  self.get_object(pk) 
+        employee.delete()
+        return Response(f"Employee is deleted having id {pk}", status=status.HTTP_204_NO_CONTENT)
 
+class PositionViewSet(APIView):
+    pass
 
-#TASK: Create endpoints which are performing CRUD operations on DEPARTMENT, POSITION, EMPLOYEE    
+class DepartmentViewSet(APIView):
+    pass    

@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.urls import path
 from . import views
 urlpatterns = [
-    path("employee/<int:pk>/", views.employee_data),    
-    path("employee/", views.employee_data),    
+    path("employees/", views.EmployeeListSet.as_view()),
+    path("employees/<int:pk>/", views.EmployeeRetrieveSet.as_view())
     
 ]

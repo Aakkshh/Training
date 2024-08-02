@@ -15,3 +15,8 @@ class DetailEmployeeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Employee
         fields = "__all__"
+        
+class UpdateEmployeeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Employee
+        fields = ["id", "first_name", "last_name", "email", "phone_number"]
